@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">墨猫账本</string>
+    <string name="title_record">记账</string>
+    <string name="title_history">账单</string>
+    <string name="title_myinfo">我的信息</string>
+    <string name="title_initial_text">initial_text</string>
+    <string name="title_morning">早上</string>
+    <string name="title_noon">中午</string>
+    <string name="title_night">晚上</string>
+    <string name="description_add_record">添加记录</string>
+    <string name="description_current_no_record">暂无记录</string>
+    <string name="description_record_comment">事件名称</string>
+    <string name="description_record_price">金额</string>
+    <string name="title_record_remove">移除记录</string>
+    <string name="title_money_yuan">￥</string>
+    <string name="title_action_save_record">保存记录</string>
+    <string name="title_time_unable_aquire">未获取到时间</string>
+    <string name="title_today_total">今日总计: </string>
+</resources>
