@@ -89,26 +89,27 @@ public class RecordManageFragment extends Fragment {
     }
 
     private void addRecord(DailyRecord recordModel){
+        //更新当前事件类型的金额总数
         total.setValue(total.getValue() + recordModel.getPrice());
 
         View root = getView();
         final LinearLayout recordListLinearLayout = root.findViewById(R.id.record_manage_ui_record_list);
         final TextView noRecordHint = root.findViewById(R.id.record_manage_ui_nothing_hint);
 
-        View recordView = inflater.inflate(R.layout.layout_record_detail, container, false);
-        EditText eventComment = recordView.findViewById(R.id.record_comment);
-        EditText eventPrice = recordView.findViewById(R.id.record_price);
+        //添加事件记录
+        View recordDetailView = inflater.inflate(R.layout.layout_record_detail, container, false);
+        EditText eventComment = recordDetailView.findViewById(R.id.record_comment);
+        EditText eventPrice = recordDetailView.findViewById(R.id.record_price);
         eventComment.setText(recordModel.getEvent());
         eventComment.setFocusable(false);
+        //事件备注的快速添加对话框
         eventComment.setOnClickListener((View parent)->{
             String[] types = {"早餐", "午餐", "晚餐", "手动输入"};
-
             AlertDialog.Builder builder = new AlertDialog.Builder(parent.getContext());
             builder.setTitle("选择备注");
             builder.setItems(types, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    //to do: bug
                     if (types[which].equals("手动输入")){
                         eventComment.setFocusableInTouchMode(true);
                         eventComment.requestFocus();
@@ -116,18 +117,22 @@ public class RecordManageFragment extends Fragment {
                         imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
                     } else {
                         eventComment.setText(types[which]);
+                        //选择完成后快速保存
+                        recordModel.setEvent(eventComment.getText().toString());
+                        viewModel.addRecord(recordModel);
                     }
-                    // the user clicked on colors[which]
                 }
             });
             builder.show();
         });
-
         eventComment.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus == false){
                     v.setFocusable(false);
+                    //手动输入完成后自动保存
+                    recordModel.setEvent(eventComment.getText().toString());
+                    viewModel.addRecord(recordModel);
                 }
             }
         });
@@ -135,8 +140,8 @@ public class RecordManageFragment extends Fragment {
         if (recordModel.getPrice() != 0f){
             eventPrice.setText(recordModel.getPrice().toString());
         }
-        Button removeRecordBtn = recordView.findViewById(R.id.record_remove_btn);
-        Pair<View, DailyRecord> record = new Pair<>(recordView, recordModel);
+        Button removeRecordBtn = recordDetailView.findViewById(R.id.record_remove_btn);
+        Pair<View, DailyRecord> record = new Pair<>(recordDetailView, recordModel);
         removeRecordBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -168,9 +173,11 @@ public class RecordManageFragment extends Fragment {
                 }
                 if (hasFocus){
                     mLastValue = Float.parseFloat(priceText);
-
                 }else{
                     total.setValue(total.getValue() - mLastValue + Float.parseFloat(priceText));
+                    //离开聚焦后对当前记录进行保存
+                    recordModel.setPrice(Float.parseFloat(priceText));
+                    viewModel.addRecord(recordModel);
                 }
             }
         });
@@ -181,7 +188,7 @@ public class RecordManageFragment extends Fragment {
         noRecordHint.setVisibility(View.INVISIBLE);
         recordViewList.add(record);
 
-        recordListLinearLayout.addView(recordView);
+        recordListLinearLayout.addView(recordDetailView);
     }
 
     private void removeRecord(Pair<View, DailyRecord> record){
