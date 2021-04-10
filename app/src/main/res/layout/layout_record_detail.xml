@@ -26,7 +26,7 @@
         android:hint="@string/description_record_price"
         android:maxLines="1"
         android:textSize="12sp"
-        android:inputType="number"
+        android:inputType="numberDecimal"
         app:layout_constraintEnd_toStartOf="@+id/record_price_type"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -41,17 +41,20 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/record_remove_btn"
         app:layout_constraintTop_toTopOf="parent" />
+
     <Button
         android:id="@+id/record_remove_btn"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:text="@string/title_record_remove"
-        android:textSize="12sp"
         android:background="@drawable/background_rounded_btn"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:text="@string/title_record_remove"
         android:textColor="@color/colorRemoveRecordBtnText"
+        android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
 
 

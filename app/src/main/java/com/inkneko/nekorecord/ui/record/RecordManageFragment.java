@@ -31,6 +31,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 public class RecordManageFragment extends Fragment {
 
@@ -139,8 +140,21 @@ public class RecordManageFragment extends Fragment {
         removeRecordBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                removeRecord(record);
-                removedRecords.add(record.second);
+
+                new AlertDialog.Builder(getContext())
+                        .setTitle("删除以下记录?")
+                        .setMessage(String.format(Locale.CHINESE, "事件：%s\n金额：%s", eventComment.getText().toString(), eventPrice.getText().toString()))
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                removeRecord(record);
+                                removedRecords.add(record.second);
+                            }
+                        })
+                        .setNegativeButton("取消", null)
+                        .create()
+                        .show();
+
             }
         });
 

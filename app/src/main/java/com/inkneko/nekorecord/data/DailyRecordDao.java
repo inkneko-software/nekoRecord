@@ -49,6 +49,14 @@ public interface DailyRecordDao {
     @Query("SELECT * FROM daily_record WHERE timestamp > :timestamp ORDER BY timestamp DESC")
     LiveData<List<DailyRecord>> selectAll(Long timestamp);
 
+    /**
+     * select all the records that above the given timestamp
+     * @param start begin time
+     * @param  end end time
+     * @return
+     */
+    @Query("SELECT * FROM daily_record WHERE timestamp > :start and timestamp < :end ORDER BY timestamp DESC")
+    LiveData<List<DailyRecord>> selectAll(Long start, Long end);
 
     @Query("SELECT * FROM daily_record WHERE event_type = :eventType")
     LiveData<List<DailyRecord>> selectAll(String eventType);
