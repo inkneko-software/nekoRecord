@@ -17,4 +17,6 @@
     <string name="title_time_unable_aquire">未获取到时间</string>
     <string name="title_today_total">今日总计: </string>
     <string name="title_change_range">设置查询范围</string>
+    <string name="time_example">00:00</string>
+    <string name="event_type">事件类别</string>
 </resources>

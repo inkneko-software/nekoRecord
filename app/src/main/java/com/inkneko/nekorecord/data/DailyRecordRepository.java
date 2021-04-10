@@ -51,6 +51,11 @@ public class DailyRecordRepository {
     public LiveData<List<DailyRecord>> getRecordsByRange(Long start, Long end){
         return mDailyRecordDao.selectAll(start, end);
     }
+
+    public LiveData<List<DailyRecord>> getRecordsByRange(String eventType,Long start, Long end){
+        return mDailyRecordDao.select(eventType, start, end);
+    }
+
     // You must call this on a non-UI thread or your app will throw an exception. Room ensures
     // that you're not doing any long running operations on the main thread, blocking the UI.
     public void insert(DailyRecord record) {

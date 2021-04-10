@@ -6,6 +6,13 @@
     <item
         android:id="@+id/action_save_record"
         android:icon="@drawable/ic_save_black_24dp"
-        android:title="@string/title_action_save_record"
-        app:showAsAction="ifRoom"/>
+        android:title="@string/title_action_save_record" />
+<!--    <item-->
+<!--        android:id="@+id/action_yesterday"-->
+<!--        android:title="切换至昨天"-->
+<!--        />-->
+<!--    <item-->
+<!--        android:id="@+id/action_nextday"-->
+<!--        android:title="切换至下一天"-->
+<!--        />-->
 </menu>

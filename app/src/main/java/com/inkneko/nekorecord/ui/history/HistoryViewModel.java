@@ -12,6 +12,7 @@ import com.inkneko.nekorecord.data.DailyRecord;
 import com.inkneko.nekorecord.data.DailyRecordRepository;
 
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 public class HistoryViewModel extends AndroidViewModel {
@@ -34,5 +35,28 @@ public class HistoryViewModel extends AndroidViewModel {
         calendar.set(Calendar.MILLISECOND, 0);
 
         return mRepo.getRecordsAboveTime(calendar.getTimeInMillis());
+    }
+
+    public LiveData<List<DailyRecord>> getHistorySomeday(Long timestampInDay){
+        Calendar date = new GregorianCalendar();
+        date.setTimeInMillis(timestampInDay);
+
+        date.set(Calendar.HOUR_OF_DAY, 0);
+        date.set(Calendar.MINUTE, 0);
+        date.set(Calendar.SECOND, 0);
+        date.set(Calendar.MILLISECOND, 0);
+
+        Long start = date.getTimeInMillis();
+        date.set(Calendar.HOUR_OF_DAY, 23);
+        date.set(Calendar.MINUTE, 59);
+        date.set(Calendar.SECOND, 59);
+        date.set(Calendar.MILLISECOND, 999);
+        Long end = date.getTimeInMillis();
+
+        return mRepo.getRecordsByRange(start, end);
+    }
+
+    public void saveRecord(DailyRecord record){
+        mRepo.insert(record);
     }
 }
