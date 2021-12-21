@@ -7,7 +7,7 @@
 ### 演示
 1.banner图片自动随时间更换
 
-![banner](git_image/banner.png)
+![banner](git_image/banner_demo.png)
 
 2.操作演示
 
