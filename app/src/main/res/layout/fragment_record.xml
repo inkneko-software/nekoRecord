@@ -1,33 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:fillViewport="true">
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBackground">
 
-
-    <LinearLayout
-        android:orientation="vertical"
-        android:id="@+id/record_manage_fragment_container"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/summary_info"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:focusableInTouchMode="true">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_centerHorizontal="true"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/record_fragment_time"
+        <ImageView
+            android:id="@+id/head_scenery_image"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:src="@drawable/night"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:scaleType="fitXY"
+            tools:ignore="ContentDescription" />
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginTop="25dp"
-            android:layout_marginStart="25dp"
-            android:textSize="28sp"
-            android:text="@string/title_time_unable_aquire"/>
+            android:layout_marginBottom="25dp">
+            <TextView
+                android:id="@+id/record_today_time"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:shadowColor="#6986F8"
+                android:shadowRadius="20"
+                android:layout_marginStart="25dp"
+                android:textSize="28sp"
+                android:textColor="#FFF"
+                android:text="@string/title_time_unable_aquire"/>
 
-        <TextView
-            android:id="@+id/total_price_title"
+            <TextView
+                android:id="@+id/total_price_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/title_today_total"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="25dp"
+                android:textColor="#FFF"/>
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <ScrollView
+        android:id="@+id/record_scroll_view"
+        app:layout_constraintTop_toBottomOf="@id/summary_info"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_width="match_parent"
+        android:layout_height="0dp">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:id="@+id/record_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/title_today_total"
-            android:layout_marginTop="10dp"
-            android:layout_marginStart="25dp"/>
+            android:focusableInTouchMode="true">
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/no_record_hint"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#FFF"
+        android:gravity="center_vertical |center_horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/summary_info">
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/no_record"/>
     </LinearLayout>
 
-</ScrollView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/addRecordFloatButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:src="@drawable/ic_baseline_addchart_24"
+        android:contentDescription="添加记录"
+        android:layout_margin="16dp"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

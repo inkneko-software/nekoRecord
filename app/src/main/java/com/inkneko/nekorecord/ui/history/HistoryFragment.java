@@ -1,57 +1,71 @@
 package com.inkneko.nekorecord.ui.history;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.util.Pair;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
+import com.inkneko.android.utils.ResourceManagement;
 import com.inkneko.nekorecord.R;
-import com.inkneko.nekorecord.data.DailyRecord;
-import com.inkneko.nekorecord.ui.record.RecordViewModel;
+import com.inkneko.nekorecord.data.model.relations.RecordInfo;
+import com.inkneko.nekorecord.ui.component.RecordEditFragment;
 
-import java.text.ParseException;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 
 public class HistoryFragment extends Fragment {
 
-    private HistoryViewModel mHistoryViewModel;
-    private LayoutInflater mViewInflater;
-    private ViewGroup mViewContainer;
-    private View mViewRoot;
+    private HistoryViewModel historyViewModel;
+    private LayoutInflater inflater;
+    private View rootView;
+
+    private TextView recordTimeRangeTextView;
+    private TextView recordSummaryTextView;
+    private LinearLayout recordContainerLinearLayout;
+    private LiveData<List<RecordInfo>> datasource;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        mHistoryViewModel = ViewModelProviders.of(this).get(HistoryViewModel.class);
-        View root = inflater.inflate(R.layout.fragment_history, container, false);
+        this.historyViewModel = ViewModelProviders.of(this).get(HistoryViewModel.class);
+        this.inflater = inflater;
+        this.rootView = inflater.inflate(R.layout.fragment_history, container, false);
 
-        mViewInflater = inflater;
-        mViewContainer = container;
-        mViewRoot = root;
-        mHistoryViewModel.fetchThisMonth().observe(this, this::showHistoryRecord);
+        recordTimeRangeTextView = rootView.findViewById(R.id.history_date_range);
+        recordContainerLinearLayout = rootView.findViewById(R.id.history_range_container);
+        recordSummaryTextView = rootView.findViewById(R.id.history_total_summary);
+
+        recordTimeRangeTextView.setText("当前帐期：本月");
+        datasource = historyViewModel.fetchThisMonth();
+        datasource.observe(getViewLifecycleOwner(), dataSourceObserver);
+
 
         setHasOptionsMenu(true);
 
-        return root;
+        /**
+         * TODO:
+         * 实现当月记录显示
+         * 实现范围记录显示
+         * 实现收入、支出的类别统计，标签统计
+         */
+        return rootView;
     }
 
     @Override
@@ -61,208 +75,99 @@ public class HistoryFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         MaterialDatePicker.Builder<Pair<Long, Long>> builder = MaterialDatePicker.Builder.dateRangePicker();
-
         MaterialDatePicker<Pair<Long, Long>> picker = builder.build();
-
+        picker.addOnPositiveButtonClickListener(new MaterialPickerOnPositiveButtonClickListener<Pair<Long, Long>>() {
+            @Override
+            public void onPositiveButtonClick(Pair<Long, Long> selection) {
+                applyTimeRange(selection.first, selection.second);
+                Toast.makeText(getContext(), "日期已切换", Toast.LENGTH_SHORT).show();
+            }
+        });
         picker.show(getChildFragmentManager(), picker.toString());
-
         return true;
-
     }
 
+    private Observer<List<RecordInfo>> dataSourceObserver = new Observer<List<RecordInfo>>(){
+        @Override
+        public void onChanged(List<RecordInfo> recordInfos) {
+            recordContainerLinearLayout.removeAllViews();
+            Calendar lastRecordDate = Calendar.getInstance();
+            lastRecordDate.setTimeInMillis(0);
+            Calendar currentRecordDate = Calendar.getInstance();
+            float incomeValue = 0;
+            float outcomeValue = 0;
+            if (recordInfos.size() != 0) {
+                for (RecordInfo recordInfo : recordInfos) {
+                    currentRecordDate.setTimeInMillis(recordInfo.recordDetail.getAddDate());
+                    if (currentRecordDate.get(Calendar.DAY_OF_YEAR) != lastRecordDate.get(Calendar.DAY_OF_YEAR)){
+                        TextView textView = new TextView(getContext());
+                        textView.setText(new SimpleDateFormat("yyyy-MM-dd").format(recordInfo.recordDetail.getAddDate()));
+                        recordContainerLinearLayout.addView(textView);
+                        lastRecordDate.setTimeInMillis(currentRecordDate.getTimeInMillis());
+                    }
+                    View recordInfoView = createRecordDetailView(recordInfo, recordContainerLinearLayout);
+                    recordInfoView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            RecordEditFragment recordEditFragment = new RecordEditFragment(recordInfo, "修改记录");
+                            recordEditFragment.show(getChildFragmentManager(), "RecordEditDialog");
+                        }
+                    });
 
-    //BUG: List<...>更新范围太大
-    private void showHistoryRecord(List<DailyRecord> dailyRecords){
-        LinearLayout historyRoot = mViewRoot.findViewById(R.id.record_summary_host);
-        //historyRoot.removeAllViews();
-        TextView thisMonthTotal = historyRoot.findViewById(R.id.record_summary_total_this_month);
-        Float total = 0f;
-        String lastDay = "";
-        Float lastDayPrice = 0.f;
-        Long lastDayTimestamp = 0L;
-        View summaryHostView = null;
-        //判断每一条记录的日期，然后添加到对应日期的summaryHostView中的summaryItemList
-        for (DailyRecord record : dailyRecords){
-            View summaryItemView = mViewInflater.inflate(R.layout.layout_record_summry_item, mViewContainer, false);
-            TextView date = summaryItemView.findViewById(R.id.record_summary_item_time);
-            TextView type = summaryItemView.findViewById(R.id.record_summary_item_type);
-            TextView comment = summaryItemView.findViewById(R.id.record_summary_item_comment);
-            TextView price = summaryItemView.findViewById(R.id.record_summary_item_price);
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(record.getTimestamp());
-            lastDayTimestamp = record.getTimestamp();
-            SimpleDateFormat summaryHostFmt = new SimpleDateFormat("MM月dd日 EEEE");
-            SimpleDateFormat summaryDateFmt = new SimpleDateFormat("HH:mm");
-
-            String thisDay = summaryHostFmt.format(calendar.getTime());
-            date.setText(summaryDateFmt.format(calendar.getTime()));
-            type.setText(record.getEventType());
-            comment.setText(record.getEvent());
-            price.setText(String.format(Locale.CHINESE, "%.2f元", record.getPrice()));
-
-            total += record.getPrice();
-
-            if (!lastDay.equals(thisDay)){
-                if (summaryHostView != null){
-                    TextView hostDate = summaryHostView.findViewById(R.id.record_summary_date);
-                    TextView hostPrice = summaryHostView.findViewById(R.id.record_summary_day_price);
-                    hostDate.setText(lastDay);
-                    hostPrice.setText(String.format(Locale.CHINESE, "%.2f元", lastDayPrice));
-                    lastDayPrice=0.f;
-                    hostDate.setOnClickListener(new HistoryModifier(summaryHostView, new DailyRecord("", 0.f, "", lastDayTimestamp), true));
-                    historyRoot.addView(summaryHostView);
+                    if (recordInfo.category.getType().compareTo("支出") == 0){
+                        outcomeValue += recordInfo.recordDetail.getValue();
+                    }else{
+                        incomeValue += recordInfo.recordDetail.getValue();
+                    }
+                    recordContainerLinearLayout.addView(recordInfoView);
                 }
-                summaryHostView = mViewInflater.inflate(R.layout.layout_record_sumary, mViewContainer, false);
-                lastDay = thisDay;
             }
-            summaryItemView.setOnClickListener(new HistoryModifier(summaryItemView, record,false));
-            LinearLayout summaryItemList = summaryHostView.findViewById(R.id.record_summary_items);
-            summaryItemList.addView(summaryItemView);
-            lastDayPrice += record.getPrice();
+            recordSummaryTextView.setText(String.format("当前总计支出：%.2f元，总计收入：%.2f元", outcomeValue, incomeValue));
+        }
+    };
+
+    private View createRecordDetailView(RecordInfo recordInfo, ViewGroup parent){
+        View recordInfoView = inflater.inflate(R.layout.layout_record_detail, parent, false);
+        ImageButton categoryIcon = recordInfoView.findViewById(R.id.category_icon);
+        TextView categoryNameTextView = recordInfoView.findViewById(R.id.category_name);
+        TextView categoryTagsTextView = recordInfoView.findViewById(R.id.category_tags);
+        TextView checkoutValueTextView = recordInfoView.findViewById(R.id.checkout_value);
+        TextView recordTimeTextView = recordInfoView.findViewById(R.id.record_time);
+
+        SimpleDateFormat fmt = new SimpleDateFormat("HH:mm");
+        recordTimeTextView.setText(fmt.format(recordInfo.recordDetail.getAddDate()));
+        categoryIcon.setImageResource(ResourceManagement.getDrawableResourceId(recordInfo.category.getIconResourceName()));
+        categoryNameTextView.setText(recordInfo.category.getName());
+        categoryTagsTextView.setText(recordInfo.recordDetail.getRemark());
+        checkoutValueTextView.setText(String.format("%.2f", recordInfo.recordDetail.getValue()));
+
+        String remark = recordInfo.recordDetail.getRemark();
+        String tags = TextUtils.join(" ", recordInfo.recordTags);
+        if (remark.length() != 0){
+            remark = remark.concat(" ").concat(tags);
+        }else{
+            remark = tags;
         }
 
-        if (summaryHostView != null){
-            TextView hostDate = summaryHostView.findViewById(R.id.record_summary_date);
-            hostDate.setText(lastDay);
-            historyRoot.addView(summaryHostView);
-            TextView hostPrice = summaryHostView.findViewById(R.id.record_summary_day_price);
-            hostDate.setOnClickListener(new HistoryModifier(summaryHostView, new DailyRecord("", 0.f, "", lastDayTimestamp), true));
-            hostPrice.setText(String.format(Locale.CHINESE, "%.2f元", lastDayPrice));
+        if (remark.length() != 0){
+            categoryTagsTextView.setText(remark);
+        }else {
+            categoryTagsTextView.setVisibility(View.GONE);
         }
 
-        thisMonthTotal.setText(String.format(Locale.CHINESE, "本月总计: %.2f元", total));
-
+        if (recordInfo.category.getType().compareTo("收入") == 0){
+            checkoutValueTextView.setText("+".concat(checkoutValueTextView.getText().toString()));
+            checkoutValueTextView.setTextColor(getActivity().getColor(R.color.colorIncomeGreen));
+        }
+        return recordInfoView;
     }
 
-    private class HistoryModifier implements View.OnClickListener{
-
-        private View bindedHistoryItem;
-        private DailyRecord bindedRecord;
-        private boolean mNewRecord = false;
-        public HistoryModifier(View historyItem, DailyRecord record, boolean newRecord){
-            super();
-            bindedHistoryItem = historyItem;
-            bindedRecord = record;
-            mNewRecord = newRecord;
-        }
-        @Override
-        public void onClick(View v) {
-            SimpleDateFormat dateFmt = new SimpleDateFormat("MM月dd日 EEEE");
-            SimpleDateFormat timeFmt = new SimpleDateFormat("HH:mm");
-            View modifyPanelView = mViewInflater.inflate(R.layout.layout_history_modify_panel, mViewContainer, false);
-            LinearLayout recordList = modifyPanelView.findViewById(R.id.history_modify_selection_list);
-            View historyItemView = mViewInflater.inflate(R.layout.layout_history_modify_item, mViewContainer, false);
-            EditText timeEdit = historyItemView.findViewById(R.id.history_modify_item_time);
-            EditText typeEdit = historyItemView.findViewById(R.id.history_modify_item_type);
-            EditText commentEdit = historyItemView.findViewById(R.id.history_modify_item_comment);
-            EditText priceEdit = historyItemView.findViewById(R.id.history_modify_item_price);
-            if (!mNewRecord){
-                timeEdit.setText(timeFmt.format(bindedRecord.getTimestamp()));
-            }
-            typeEdit.setText(bindedRecord.getEventType());
-            commentEdit.setText(bindedRecord.getEvent());
-            priceEdit.setText(bindedRecord.getPrice().toString());
-            recordList.addView(historyItemView);
-            new AlertDialog.Builder(getContext())
-                    .setTitle(dateFmt.format(bindedRecord.getTimestamp()))
-                    .setView(modifyPanelView)
-                    .setPositiveButton("保存", new UpdateHistoryHelper(bindedHistoryItem, historyItemView, bindedRecord, mNewRecord))
-                    .setNegativeButton("取消", null)
-                    .setNeutralButton("删除", null)
-                    .setCancelable(false)
-                    .create().show();
-        }
-    }
-
-    private class UpdateHistoryHelper implements DialogInterface.OnClickListener{
-
-        private View mParent;
-        private View mModifiedHistory;
-        private DailyRecord mRecord;
-        private boolean mNewRecord = false;
-        public UpdateHistoryHelper(View parent, View modifiedHistory, DailyRecord record, boolean newRecord){
-            mParent = parent;
-            mModifiedHistory = modifiedHistory;
-            mRecord = record;
-            mNewRecord = newRecord;
-
-
-        }
-
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-            TextView newDate = mModifiedHistory.findViewById(R.id.history_modify_item_time);
-            TextView newType = mModifiedHistory.findViewById(R.id.history_modify_item_type);
-            TextView newComment = mModifiedHistory.findViewById(R.id.history_modify_item_comment);
-            TextView newPrice = mModifiedHistory.findViewById(R.id.history_modify_item_price);
-
-
-            SimpleDateFormat timeFmt = new SimpleDateFormat("HH:mm");
-            try {
-                Date modifiedTime = timeFmt.parse(newDate.getText().toString());
-                Calendar inputTime = Calendar.getInstance();
-                inputTime.setTime(modifiedTime);
-
-                Calendar calendar = new GregorianCalendar();
-                calendar.setTimeInMillis(mRecord.getTimestamp());
-                calendar.set(Calendar.HOUR_OF_DAY, inputTime.get(Calendar.HOUR_OF_DAY));
-                calendar.set(Calendar.MINUTE, inputTime.get(Calendar.MINUTE));
-                calendar.set(Calendar.SECOND, inputTime.get(Calendar.SECOND));
-                calendar.set(Calendar.MILLISECOND, 0);
-                mRecord.setTimestamp(calendar.getTimeInMillis());
-            }catch (ParseException e){
-                mRecord.setTimestamp(0L);
-            }
-            mRecord.setEventType(newType.getText().toString());
-            mRecord.setEvent(newComment.getText().toString());
-            mRecord.setPrice(Float.parseFloat(newPrice.getText().toString()));
-
-            if (mRecord.getTimestamp() == 0){
-                new AlertDialog.Builder(getContext())
-                        .setTitle("时间格式错误")
-                        .setMessage("允许的格式为 小时:分钟")
-                        .create().show();
-
-                return;
-            }
-
-            mHistoryViewModel.saveRecord(mRecord);
-            if (mNewRecord){
-                View summaryItemView = mViewInflater.inflate(R.layout.layout_record_summry_item, mViewContainer, false);
-                TextView date = summaryItemView.findViewById(R.id.record_summary_item_time);
-                TextView type = summaryItemView.findViewById(R.id.record_summary_item_type);
-                TextView comment = summaryItemView.findViewById(R.id.record_summary_item_comment);
-                TextView price = summaryItemView.findViewById(R.id.record_summary_item_price);
-
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTimeInMillis(mRecord.getTimestamp());
-                SimpleDateFormat summaryDateFmt = new SimpleDateFormat("HH:mm");
-
-                date.setText(summaryDateFmt.format(mRecord.getTimestamp()));
-                type.setText(mRecord.getEventType());
-                comment.setText(mRecord.getEvent());
-                price.setText(String.format(Locale.CHINESE, "%.2f元", mRecord.getPrice()));
-
-                ((LinearLayout)mParent).addView(summaryItemView);
-            }else {
-
-                TextView date = mParent.findViewById(R.id.record_summary_item_time);
-                TextView type = mParent.findViewById(R.id.record_summary_item_type);
-                TextView comment = mParent.findViewById(R.id.record_summary_item_comment);
-                TextView price = mParent.findViewById(R.id.record_summary_item_price);
-
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTimeInMillis(mRecord.getTimestamp());
-                SimpleDateFormat summaryDateFmt = new SimpleDateFormat("HH:mm");
-
-                date.setText(summaryDateFmt.format(mRecord.getTimestamp()));
-                type.setText(mRecord.getEventType());
-                comment.setText(mRecord.getEvent());
-                price.setText(String.format(Locale.CHINESE, "%.2f元", mRecord.getPrice()));
-            }
-        }
+    private void applyTimeRange(Long start, Long end){
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyy/MM/dd");
+        recordTimeRangeTextView.setText(String.format("当前帐期：%s - %s", fmt.format(start), fmt.format(end)));
+        datasource.removeObservers(getViewLifecycleOwner());
+        datasource = historyViewModel.fetchRange(start, end);
+        datasource.observe(getViewLifecycleOwner(), dataSourceObserver);
     }
 }

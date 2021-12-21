@@ -6,7 +6,7 @@
     <item
         android:id="@+id/action_save_record"
         android:icon="@drawable/ic_save_black_24dp"
-        android:title="@string/title_action_save_record" />
+        android:title="@string/title_action_change_date" />
 <!--    <item-->
 <!--        android:id="@+id/action_yesterday"-->
 <!--        android:title="切换至昨天"-->

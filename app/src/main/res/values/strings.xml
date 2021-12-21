@@ -13,9 +13,9 @@
     <string name="description_record_price">金额</string>
     <string name="title_record_remove">移除记录</string>
     <string name="title_money_yuan">￥</string>
-    <string name="title_action_save_record">保存记录</string>
+    <string name="title_action_change_date">更换日期</string>
     <string name="title_time_unable_aquire">未获取到时间</string>
-    <string name="title_today_total">今日总计: </string>
+    <string name="title_today_total">今日支出总计:0.00, 收入总计: 0.00</string>
     <string name="title_change_range">设置查询范围</string>
     <string name="time_example">00:00</string>
     <string name="event_type">事件类别</string>

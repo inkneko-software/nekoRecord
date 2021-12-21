@@ -1,29 +1,50 @@
 package com.inkneko.nekorecord.ui.record;
 
 import android.app.Application;
+import android.icu.util.Calendar;
+import android.icu.util.GregorianCalendar;
 
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
-import com.inkneko.nekorecord.data.DailyRecord;
-import com.inkneko.nekorecord.data.DailyRecordRepository;
+import com.inkneko.nekorecord.data.RecordRepository;
+import com.inkneko.nekorecord.data.model.Record;
+import com.inkneko.nekorecord.data.model.relations.CategoryInfo;
+import com.inkneko.nekorecord.data.model.relations.RecordInfo;
 
-import java.time.LocalTime;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.util.Date;
 import java.util.List;
 
 public class RecordViewModel extends AndroidViewModel {
 
     //private LiveData<List<DailyRecord>> mMorningRecord;
-    private DailyRecordRepository mRepo;
+    private RecordRepository recordRepository;
     public RecordViewModel(Application application) {
         super(application);
-        mRepo = new DailyRecordRepository(application);
+        recordRepository = new RecordRepository(application);
     }
 
+    public LiveData<List<RecordInfo>> getRecordInfosToday(){
+        Calendar date = Calendar.getInstance();
+        date.set(Calendar.HOUR_OF_DAY, 0);
+        date.set(Calendar.MINUTE, 0);
+        date.set(Calendar.SECOND, 0);
+        date.set(Calendar.MILLISECOND, 0);
+        long start = date.getTimeInMillis();
+        date.set(Calendar.HOUR_OF_DAY, date.getMaximum(Calendar.HOUR_OF_DAY));
+        date.set(Calendar.MINUTE, date.getMaximum(Calendar.MINUTE));
+        date.set(Calendar.SECOND, date.getMaximum(Calendar.SECOND));
+        date.set(Calendar.MILLISECOND, date.getMaximum(Calendar.MILLISECOND));
+        long end = date.getTimeInMillis();
+
+        return recordRepository.getRecordInfosByTimeRange(start, end);
+    }
+
+    public LiveData<List<RecordInfo>> getRecordInfosByRange(Long start, Long end){
+        return recordRepository.getRecordInfosByTimeRange(start, end);
+    }
+
+    /*
     public LiveData<List<DailyRecord>> getRecords(String eventType, int offset, int limit) {
         return mRepo.getRecords(eventType, offset, limit);
     }
@@ -63,5 +84,5 @@ public class RecordViewModel extends AndroidViewModel {
 
     public void removeRecord(DailyRecord record) {
         mRepo.delete(record);
-    }
+    }*/
 }

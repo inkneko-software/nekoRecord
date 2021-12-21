@@ -31,7 +31,7 @@ public class ScreenSupport {
                 }
             });
         }
-        final float targetDensity = appDisplayMetrics.widthPixels / 420;
+        final float targetDensity = appDisplayMetrics.widthPixels / 380;
         final float targetScaledDensity = targetDensity * (sNoncompatScaledDensity / sNoncompatDensity);
         final int targetDensityDpi = (int)(160 * targetDensity);
 

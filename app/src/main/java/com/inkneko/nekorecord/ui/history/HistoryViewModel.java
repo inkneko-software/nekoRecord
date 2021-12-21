@@ -1,42 +1,47 @@
 package com.inkneko.nekorecord.ui.history;
 
 import android.app.Application;
-import android.util.Pair;
 
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
-import com.inkneko.nekorecord.data.DailyRecord;
-import com.inkneko.nekorecord.data.DailyRecordRepository;
+import com.inkneko.nekorecord.data.RecordRepository;
+import com.inkneko.nekorecord.data.model.relations.RecordInfo;
 
 import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 public class HistoryViewModel extends AndroidViewModel {
 
-    private DailyRecordRepository mRepo;
+    private RecordRepository recordRepository;
 
     public HistoryViewModel(Application application) {
         super(application);
-        mRepo = new DailyRecordRepository(application);
+        recordRepository = new RecordRepository(application);
 
     }
 
 
-    public LiveData<List<DailyRecord>> fetchThisMonth(){
+    public LiveData<List<RecordInfo>> fetchThisMonth(){
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.DAY_OF_MONTH, 1);
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
-
-        return mRepo.getRecordsAboveTime(calendar.getTimeInMillis());
+        long start = calendar.getTimeInMillis();
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getMaximum(Calendar.DAY_OF_MONTH));
+        calendar.set(Calendar.HOUR_OF_DAY, calendar.getMaximum(Calendar.HOUR_OF_DAY));
+        calendar.set(Calendar.MINUTE, calendar.getMaximum(Calendar.MINUTE));
+        calendar.set(Calendar.SECOND, calendar.getMaximum(Calendar.SECOND));
+        calendar.set(Calendar.MILLISECOND, calendar.getMaximum(Calendar.MILLISECOND));
+        return recordRepository.getRecordInfosByTimeRange(start, calendar.getTimeInMillis());
     }
 
+    public LiveData<List<RecordInfo>> fetchRange(Long start, Long end){
+        return recordRepository.getRecordInfosByTimeRange(start, end);
+    }
+/*
     public LiveData<List<DailyRecord>> getHistorySomeday(Long timestampInDay){
         Calendar date = new GregorianCalendar();
         date.setTimeInMillis(timestampInDay);
@@ -59,4 +64,11 @@ public class HistoryViewModel extends AndroidViewModel {
     public void saveRecord(DailyRecord record){
         mRepo.insert(record);
     }
+
+    public void removeRecord(DailyRecord record){
+        mRepo.delete(record);
+    }
+
+*/
+
 }

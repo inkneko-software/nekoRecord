@@ -3,22 +3,44 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="fill_parent"
     android:layout_width="fill_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="@color/colorBackground">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/history_date_range"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginTop="10dp"
+        android:text="当前帐期：2021/01/01 - 2021/02/01"/>
+
+    <TextView
+        android:id="@+id/history_total_summary"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="当前总计支出：20.00元，总计收入：0.00元"/>
+
 
     <LinearLayout
-        android:id="@+id/record_summary_host"
+        android:id="@+id/history_range_container"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="15dp"
         android:layout_marginEnd="15dp"
         android:layout_marginTop="10dp"
-        android:paddingBottom="20dp">
+        android:paddingBottom="20dp"/>
 
-        <TextView
-            android:id="@+id/record_summary_total_this_month"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-    </LinearLayout>
+
+</LinearLayout>
 
 </ScrollView>
