@@ -18,7 +18,7 @@ import java.util.TimerTask;
 public class WelcomeScreenActivity extends AppCompatActivity {
     private Handler mHandler;
 
-    private long delay = 15;
+    private long delay = 1500;
     private int i = 0;
 
     @Override
